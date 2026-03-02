@@ -191,6 +191,8 @@ export class ConnectorManager {
           break;
         }
         case 'sms': {
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore — optional connector, installed at runtime
           const { SmsConnector } = await import('@arvis/connector-sms');
           connector = new SmsConnector(this.bus, {
             accountSid:     bot.token,
@@ -202,6 +204,8 @@ export class ConnectorManager {
           break;
         }
         case 'email': {
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore — optional connector, installed at runtime
           const { EmailConnector } = await import('@arvis/connector-email');
           connector = new EmailConnector(this.bus, {
             imap: {

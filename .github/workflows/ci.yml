@@ -26,5 +26,8 @@ jobs:
       - name: Run tests
         run: npm test
 
-      - name: Typecheck
+      - name: Typecheck (core)
         run: npm run typecheck
+
+      - name: Typecheck (website)
+        run: cd packages/website && npx tsc --noEmit

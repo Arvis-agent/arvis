@@ -77,8 +77,8 @@ describe('AccountManager', () => {
     ]);
 
     const acct = accounts.getAvailable('full')!;
-    accounts.recordUsage(acct.id, 1000);
-    accounts.recordUsage(acct.id, 500);
+    accounts.recordUsage(acct.id);
+    accounts.recordUsage(acct.id);
 
     const status = accounts.getStatus();
     expect(status[0].totalMessages).toBe(2);

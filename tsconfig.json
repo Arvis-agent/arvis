@@ -23,5 +23,5 @@
       "@arvis/dashboard": ["./packages/dashboard/src/index.ts"]
     }
   },
-  "exclude": ["node_modules", "dist", "data"]
+  "exclude": ["node_modules", "dist", "data", "packages/website", "packages/dashboard", "packages/connector-sms", "packages/connector-email"]
 }

@@ -55,8 +55,9 @@ plan: monthly
       const actions = parser.parse(output);
       expect(actions).toHaveLength(1);
       expect(actions[0].type).toBe('create_client');
-      expect(actions[0].data.name).toBe('Acme Corp');
-      expect(actions[0].data.plan).toBe('monthly');
+      const clientData = actions[0].data as unknown as { name: string; plan: string };
+      expect(clientData.name).toBe('Acme Corp');
+      expect(clientData.plan).toBe('monthly');
     });
 
     it('parses CREATE_CRON blocks', () => {
@@ -71,8 +72,9 @@ channel: 123456
       const actions = parser.parse(output);
       expect(actions).toHaveLength(1);
       expect(actions[0].type).toBe('create_cron');
-      expect(actions[0].data.agent).toBe('birb-dev');
-      expect(actions[0].data.schedule).toBe('0 * * * *');
+      const cronData = actions[0].data as { agent: string; schedule: string };
+      expect(cronData.agent).toBe('birb-dev');
+      expect(cronData.schedule).toBe('0 * * * *');
     });
 
     it('parses CREATE_HEARTBEAT blocks', () => {
