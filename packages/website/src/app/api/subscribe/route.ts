@@ -14,15 +14,14 @@ export async function POST(req: NextRequest) {
   }
 
   const resendKey = process.env.RESEND_API_KEY;
-  const audienceId = process.env.RESEND_AUDIENCE_ID;
 
-  if (!resendKey || !audienceId) {
-    // No keys configured — dev/no-op mode
-    console.log(`[subscribe] No Resend config. Would have subscribed: ${email}`);
+  if (!resendKey) {
+    console.log(`[subscribe] No RESEND_API_KEY. Would have subscribed: ${email}`);
     return NextResponse.json({ ok: true });
   }
 
-  const res = await fetch(`https://api.resend.com/audiences/${audienceId}/contacts`, {
+  // POST /contacts — Resend Contacts API (no audience ID needed)
+  const res = await fetch('https://api.resend.com/contacts', {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${resendKey}`,
@@ -31,7 +30,7 @@ export async function POST(req: NextRequest) {
     body: JSON.stringify({ email, unsubscribed: false }),
   });
 
-  // Contact already exists — treat as success
+  // Already subscribed — treat as success
   if (res.status === 409) {
     return NextResponse.json({ ok: true });
   }
