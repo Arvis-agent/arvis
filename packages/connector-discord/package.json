@@ -1,0 +1,14 @@
+{
+  "name": "@arvis/connector-discord",
+  "version": "3.0.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "discord.js": "^14.14.1"
+  }
+}

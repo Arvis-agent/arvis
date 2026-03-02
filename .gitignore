@@ -1,0 +1,14 @@
+node_modules/
+dist/
+data/
+.next/
+.env
+.env.local
+.env.*.local
+*.db
+*.db-journal
+*.db-wal
+*.log
+.DS_Store
+Thumbs.db
+.claude/

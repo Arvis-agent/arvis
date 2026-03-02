@@ -1,0 +1,30 @@
+services:
+  arvis:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5050:5050"   # Webhook server
+      - "5070:5070"   # Web connector (WebSocket + REST)
+    volumes:
+      - ./data:/app/data
+      - ./.env:/app/.env:ro
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - DATA_DIR=/app/data
+
+  dashboard:
+    build:
+      context: .
+      dockerfile: packages/dashboard/Dockerfile
+    ports:
+      - "5100:5100"   # Next.js dashboard
+    depends_on:
+      - arvis
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - WEB_CONNECTOR_URL=ws://arvis:5070
+
+volumes: {}

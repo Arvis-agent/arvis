@@ -1,0 +1,17 @@
+{
+  "name": "@arvis/connector-sms",
+  "version": "3.0.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "twilio": "^5.3.7"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0"
+  }
+}

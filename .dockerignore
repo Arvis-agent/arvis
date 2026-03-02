@@ -1,0 +1,11 @@
+node_modules
+.git
+.env
+data/
+*.db
+*.db-wal
+*.db-shm
+packages/dashboard/.next
+packages/dashboard/node_modules
+**/.DS_Store
+**/npm-debug.log

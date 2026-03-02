@@ -1,0 +1,14 @@
+{
+  "name": "@arvis/connector-telegram",
+  "version": "3.0.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "grammy": "^1.21.1"
+  }
+}

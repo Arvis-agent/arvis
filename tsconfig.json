@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022"],
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "dist",
+    "rootDir": ".",
+    "composite": true,
+    "paths": {
+      "@arvis/core": ["./packages/core/src/index.ts"],
+      "@arvis/connector-discord": ["./packages/connector-discord/src/index.ts"],
+      "@arvis/connector-telegram": ["./packages/connector-telegram/src/index.ts"],
+      "@arvis/connector-web": ["./packages/connector-web/src/index.ts"],
+      "@arvis/dashboard": ["./packages/dashboard/src/index.ts"]
+    }
+  },
+  "exclude": ["node_modules", "dist", "data"]
+}

@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 48" fill="none">
+  <!-- >_< symbol (left side) -->
+
+  <!-- > -->
+  <polyline points="3,6 16,24 3,42"
+    fill="none" stroke="#8B5CF6" stroke-width="4"
+    stroke-linecap="square" stroke-linejoin="miter"/>
+
+  <!-- _ (baseline of character cell) -->
+  <line x1="20" y1="42" x2="31" y2="42"
+    stroke="#8B5CF6" stroke-width="4" stroke-linecap="square"/>
+
+  <!-- < -->
+  <polyline points="47,6 34,24 47,42"
+    fill="none" stroke="#8B5CF6" stroke-width="4"
+    stroke-linecap="square" stroke-linejoin="miter"/>
+
+  <!-- arvis text -->
+  <text
+    x="59"
+    y="34"
+    font-family="ui-monospace, 'JetBrains Mono', 'Cascadia Code', Consolas, monospace"
+    font-size="22"
+    font-weight="700"
+    letter-spacing="-0.03em"
+    fill="#e4e4e7"
+  >arvis</text>
+</svg>

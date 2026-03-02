@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" fill="none">
+  <!-- Background -->
+  <rect width="80" height="80" rx="16" fill="#09090b"/>
+  <rect width="79" height="79" x="0.5" y="0.5" rx="15.5" fill="none" stroke="#1a1a1f" stroke-width="1"/>
+
+  <!-- > (chevron right) -->
+  <polyline points="16,22 30,40 16,58"
+    fill="none" stroke="#8B5CF6" stroke-width="5"
+    stroke-linecap="square" stroke-linejoin="miter"/>
+
+  <!-- _ (underscore — sits at baseline of chevrons) -->
+  <line x1="34" y1="58" x2="46" y2="58"
+    stroke="#8B5CF6" stroke-width="5" stroke-linecap="square"/>
+
+  <!-- < (chevron left) -->
+  <polyline points="64,22 50,40 64,58"
+    fill="none" stroke="#8B5CF6" stroke-width="5"
+    stroke-linecap="square" stroke-linejoin="miter"/>
+</svg>

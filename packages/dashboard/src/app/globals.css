@@ -1,0 +1,237 @@
+@import 'tailwindcss';
+
+/* ═══════════════════════════════════════════════════════════
+   ARVIS — Pitch Black Design System
+   Ref: better-auth.com · linear.app · chanhdai.com
+
+   Geist Pixel Square = EVERYTHING (primary font)
+   Geist Sans         = fallback
+   Geist Mono         = code/numbers
+   ═══════════════════════════════════════════════════════════ */
+
+@theme {
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-geist-mono), 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+  --font-pixel-square: var(--font-geist-pixel-square);
+
+  /* ── Surface — PITCH BLACK ────────────────────────────── */
+  --color-background:         #000000;
+  --color-foreground:         #e4e4e7;
+  --color-card:               #09090b;
+  --color-card-foreground:    #e4e4e7;
+  --color-popover:            #000000;
+  --color-popover-foreground: #e4e4e7;
+
+  /* ── Primary: violet ────────────────────────────────────── */
+  --color-primary:            #8B5CF6;
+  --color-primary-foreground: #000000;
+
+  /* ── Neutral scale ─────────────────────────────────────── */
+  --color-secondary:            #111113;
+  --color-secondary-foreground: #a1a1aa;
+  --color-muted:                #0c0c0e;
+  --color-muted-foreground:     #63636e;
+  --color-accent:               #111113;
+  --color-accent-foreground:    #e4e4e7;
+
+  /* ── Semantic ──────────────────────────────────────────── */
+  --color-destructive:            #dc2626;
+  --color-destructive-foreground: #e4e4e7;
+
+  /* ── Borders ───────────────────────────────────────────── */
+  --color-border: #1a1a1f;
+  --color-input:  #1a1a1f;
+  --color-ring:   #8B5CF6;
+
+  /* ── Charts ────────────────────────────────────────────── */
+  --color-chart-1: #8B5CF6;
+  --color-chart-2: #a78bfa;
+  --color-chart-3: #63636e;
+  --color-chart-4: #2a2a30;
+  --color-chart-5: #e4e4e7;
+
+  /* ── Sidebar ───────────────────────────────────────────── */
+  --color-sidebar-background:         #000000;
+  --color-sidebar-foreground:         #63636e;
+  --color-sidebar-primary:            #8B5CF6;
+  --color-sidebar-primary-foreground: #000000;
+  --color-sidebar-accent:             #111113;
+  --color-sidebar-accent-foreground:  #e4e4e7;
+  --color-sidebar-border:             #1a1a1f;
+  --color-sidebar-ring:               #8B5CF6;
+
+  --radius: 0.25rem;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   KEYFRAMES — defined at top level so they're globally valid
+   ═══════════════════════════════════════════════════════════ */
+@keyframes accordion-down {
+  from { height: 0; }
+  to   { height: var(--radix-accordion-content-height); }
+}
+@keyframes accordion-up {
+  from { height: var(--radix-accordion-content-height); }
+  to   { height: 0; }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+@keyframes page-enter {
+  from { opacity: 0; transform: translateY(4px); }
+}
+@keyframes msg-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes cursor-blink {
+  0%, 49% { opacity: 0.8; }
+  50%, 100% { opacity: 0; }
+}
+.streaming-cursor::after {
+  content: '▌';
+  display: inline-block;
+  animation: cursor-blink 0.7s step-end infinite;
+  margin-left: 1px;
+  color: inherit;
+  opacity: 0.6;
+}
+@keyframes dot-pulse {
+  0%, 100% { opacity: 0.3; }
+  50%       { opacity: 1;   }
+}
+@keyframes queue-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes dropdown-in {
+  from { opacity: 0; transform: translateY(-6px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+@keyframes dropdown-out {
+  from { opacity: 1; transform: translateY(0)    scale(1); }
+  to   { opacity: 0; transform: translateY(-4px) scale(0.97); }
+}
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+@keyframes toast-out {
+  from { opacity: 1; transform: translateY(0)    scale(1); }
+  to   { opacity: 0; transform: translateY(8px)  scale(0.96); }
+}
+@keyframes animate-in {
+  from {
+    opacity: var(--tw-enter-opacity, 1);
+    transform: translateX(var(--tw-enter-translate-x, 0))
+               translateY(var(--tw-enter-translate-y, 0))
+               scale(var(--tw-enter-scale, 1));
+  }
+}
+@keyframes animate-out {
+  to {
+    opacity: var(--tw-exit-opacity, 0);
+    transform: translateX(var(--tw-exit-translate-x, 0))
+               translateY(var(--tw-exit-translate-y, 0))
+               scale(var(--tw-exit-scale, 1));
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   BASE LAYER
+   ═══════════════════════════════════════════════════════════ */
+@layer base {
+  *, *::before, *::after {
+    @apply border-border;
+    box-sizing: border-box;
+  }
+
+  html { color-scheme: dark; text-rendering: optimizeLegibility; }
+
+  /* GeistPixelSquare.className on <body> in layout.tsx sets
+     font-family + font-weight:500 — no extra override needed */
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-size: 14px;
+    line-height: 1.5;
+    /* Subtle pixel dot grid — robotic purple feel */
+    background-image: radial-gradient(rgba(139, 92, 246, 0.08) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+
+  ::selection { background-color: rgba(139, 92, 246, 0.2); color: #e4e4e7; }
+
+  ::-webkit-scrollbar         { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track   { background: transparent; }
+  ::-webkit-scrollbar-thumb   { background: #1a1a1f; border-radius: 4px; }
+
+  *:focus         { outline: none; }
+  *:focus-visible { outline: 2px solid #8B5CF6; outline-offset: 2px; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   UTILITIES
+   ═══════════════════════════════════════════════════════════ */
+@layer utilities {
+  /* Pixel font — both class names resolve to GeistPixelSquare */
+  .font-pixel-square,
+  .font-pixel {
+    font-family: var(--font-pixel-square);
+    font-weight: 500;
+  }
+
+  /* Skeleton shimmer — sweep from left to right, no flicker */
+  .skeleton {
+    position: relative;
+    overflow: hidden;
+  }
+  .skeleton::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      transparent 25%,
+      rgba(255, 255, 255, 0.05) 50%,
+      transparent 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s linear infinite;
+  }
+
+  /* Queue running spinner — 2s slow rotation */
+  .queue-spinner { animation: queue-spin 2s linear infinite; }
+
+  /* Page enter animation */
+  .page-enter { animation: page-enter 200ms ease-out both; }
+
+  /* Loaded content fade-in */
+  .data-enter { animation: page-enter 250ms ease-out both; }
+
+  /* Dropdown enter/exit */
+  .select-dropdown-enter { animation: dropdown-in  180ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+  .select-dropdown-exit  { animation: dropdown-out 160ms cubic-bezier(0.4, 0, 1, 1)    both; }
+
+  /* Toast enter/exit/bump */
+  .toast-enter { animation: toast-in   250ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+  .toast-exit  { animation: toast-out  300ms cubic-bezier(0.4, 0, 1, 1)    both; }
+
+  /* Animate in/out primitives */
+  .animate-in  { animation: animate-in 150ms ease-out both; }
+  .animate-out { animation: animate-out 100ms ease-in forwards; }
+  .fade-in-0   { --tw-enter-opacity: 0; }
+  .fade-out-0  { --tw-exit-opacity: 0; }
+  .zoom-in-95  { --tw-enter-scale: 0.98; }
+  .zoom-out-95 { --tw-exit-scale: 0.98; }
+  .slide-in-from-top-1    { --tw-enter-translate-y: -4px; }
+  .slide-in-from-bottom-1 { --tw-enter-translate-y: 4px; }
+  .slide-in-from-bottom-2 { --tw-enter-translate-y: 8px; }
+  .slide-in-from-left     { --tw-enter-translate-x: -100%; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}

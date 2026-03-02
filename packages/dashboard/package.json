@@ -1,0 +1,37 @@
+{
+  "name": "@arvis/dashboard",
+  "version": "3.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --port 3000",
+    "build": "next build",
+    "start": "next start --port 3000"
+  },
+  "dependencies": {
+    "@arvis/core": "*",
+    "@radix-ui/react-slot": "^1.2.4",
+    "@tanstack/react-table": "^8",
+    "class-variance-authority": "^0.7",
+    "clsx": "^2",
+    "cmdk": "^1",
+    "geist": "^1.7.0",
+    "jose": "^6",
+    "lucide-react": "^0.475",
+    "next": "^15.3",
+    "react": "^19",
+    "react-dom": "^19",
+    "react-markdown": "^10.1.0",
+    "recharts": "^2.15",
+    "remark-gfm": "^4.0.1",
+    "tailwind-merge": "^3"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^22",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "postcss": "^8",
+    "tailwindcss": "^4",
+    "typescript": "^5.3"
+  }
+}

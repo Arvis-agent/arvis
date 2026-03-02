@@ -1,0 +1,12 @@
+{
+  "name": "@arvis/connector-whatsapp",
+  "version": "3.0.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run"
+  },
+  "dependencies": {}
+}
