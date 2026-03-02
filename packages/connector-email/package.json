@@ -14,6 +14,7 @@
     "mailparser": "^3.7.1"
   },
   "devDependencies": {
+    "@types/mailparser": "^3",
     "@types/nodemailer": "^6.4.14",
     "@types/node": "^20.11.0"
   }

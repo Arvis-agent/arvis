@@ -137,7 +137,7 @@ export class EmailConnector {
         const fromAddress = from?.address ?? 'unknown@unknown';
         const fromName = from?.name || fromAddress;
         const subject = parsed.subject ?? '(no subject)';
-        const text = parsed.text ?? parsed.html?.replace(/<[^>]+>/g, ' ').trim() ?? '';
+        const text = parsed.text ?? (typeof parsed.html === 'string' ? parsed.html.replace(/<[^>]+>/g, ' ').trim() : '') ?? '';
 
         if (!text) continue;
 
@@ -153,7 +153,7 @@ export class EmailConnector {
             ...(this.config.defaultAgentId != null && { assignedAgentId: this.config.defaultAgentId }),
             subject,
             from: fromAddress,
-            to: Array.isArray(parsed.to) ? parsed.to.map((a) => a.text).join(', ') : parsed.to?.text,
+            to: Array.isArray(parsed.to) ? parsed.to.map((a: { text: string }) => a.text).join(', ') : parsed.to?.text,
             messageId: parsed.messageId,
           },
         };
