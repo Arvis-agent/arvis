@@ -9,6 +9,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.2.71",
     "better-sqlite3": "^11.0.0",
     "cron-parser": "^4.9.0",
     "dotenv": "^16.3.1",

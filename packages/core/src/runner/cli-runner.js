@@ -1,31 +1,27 @@
-import { spawn } from 'child_process';
+import { query } from '@anthropic-ai/claude-agent-sdk';
 import { estimateTokens } from '../lib/token-utils.js';
 import { createLogger } from '../logger.js';
 const log = createLogger('cli-runner');
 /**
- * Executes Claude via the CLI subprocess.
+ * Executes Claude via the official Agent SDK.
  *
  * Stateless design: Arvis owns all conversation history (DB-backed).
- * Each CLI invocation gets a fresh, self-contained prompt with full context.
+ * Each invocation gets a fresh, self-contained prompt with full context.
  * No session persistence — no session files on disk, no folder sprawl.
  *
- * System prompt piped via stdin (avoids Windows command-line length limits).
+ * Uses @anthropic-ai/claude-agent-sdk instead of manual child_process.spawn.
+ * Handles Windows .cmd resolution, stdin piping, and platform quirks automatically.
  */
 export class CLIRunner {
     async execute(request) {
         const cwd = request.projectPath || request.agent.projectPath || process.cwd();
+        const startTime = Date.now();
         // Build the full prompt with system instructions embedded
         let fullPrompt = request.prompt;
         if (request.systemPrompt) {
             fullPrompt = `<instructions>\n${request.systemPrompt}\n</instructions>\n\nRespond to the following. You MUST follow all instructions above, especially any action tag formats.\n\n${request.prompt}`;
         }
-        const args = [
-            '--print',
-            '--no-session-persistence', // Arvis manages history — don't save CLI sessions to disk
-            '--model', request.model || request.agent.model || 'claude-sonnet-4-6',
-            '--max-turns', String(request.maxTurns || 25),
-        ];
-        // Tool restrictions — map Arvis tool names to Claude Code CLI built-in names
+        // Map Arvis tool names to Claude Code CLI tool names
         const ARVIS_TO_CLI = {
             http_fetch: ['WebFetch'],
             web_search: ['WebSearch'],
@@ -39,6 +35,7 @@ export class CLIRunner {
             calculate: [],
         };
         const tools = request.allowedTools || request.agent.allowedTools;
+        const allowedTools = [];
         if (tools?.length) {
             const cliTools = new Set();
             for (const tool of tools) {
@@ -48,106 +45,70 @@ export class CLIRunner {
                         cliTools.add(t); });
                 }
                 else {
-                    cliTools.add(tool); // pass through unknown tools unchanged
+                    cliTools.add(tool);
                 }
             }
-            for (const t of cliTools) {
-                args.push('--allowedTools', t);
-            }
+            allowedTools.push(...cliTools);
         }
+        // Build env — multi-account support via HOME dir override
         const env = { ...process.env };
         if (request.account?.homeDir) {
             env.HOME = request.account.homeDir;
             env.USERPROFILE = request.account.homeDir;
         }
         delete env.CLAUDECODE;
-        const startTime = Date.now();
-        // ── Docker sandbox ────────────────────────────────────────────────────────
-        let spawnCmd;
-        let spawnArgs;
-        if (request.sandbox === 'docker') {
-            const image = process.env.ARVIS_SANDBOX_IMAGE || 'arvis-sandbox:latest';
-            const homeDir = request.account?.homeDir || process.env.HOME || process.env.USERPROFILE || '/root';
-            spawnCmd = 'docker';
-            spawnArgs = [
-                'run', '--rm', '-i',
-                '--network', 'none',
-                '--cpus', '1',
-                '--memory', '512m',
-                '--mount', `type=bind,source=${cwd},target=/workspace,readonly=false`,
-                '--mount', `type=bind,source=${homeDir},target=/home/claude,readonly=true`,
-                '--env', `HOME=/home/claude`,
-                '--workdir', '/workspace',
-                image,
-                'claude', ...args,
-            ];
-            log.info({ image, cwd }, 'Starting CLI in Docker sandbox');
-        }
-        else {
-            spawnCmd = 'claude';
-            spawnArgs = args;
-        }
-        return new Promise((resolve, reject) => {
-            log.info({ promptLen: fullPrompt.length, cwd, sandbox: request.sandbox || 'none' }, 'Starting CLI');
-            // On Windows, `claude` is a .cmd shim — spawn can't resolve it without a shell.
-            // On Linux/macOS, direct spawn works and avoids shell overhead.
-            // See: https://github.com/anthropics/claude-code/issues/771
-            const isWindows = process.platform === 'win32';
-            const child = spawn(spawnCmd, spawnArgs, {
-                cwd,
-                env: env,
-                shell: isWindows,
-                windowsHide: true,
-                stdio: ['pipe', 'pipe', 'pipe'],
+        log.info({ promptLen: fullPrompt.length, cwd, model: request.model || request.agent.model }, 'Starting SDK query');
+        try {
+            const conversation = query({
+                prompt: fullPrompt,
+                options: {
+                    model: request.model || request.agent.model || 'claude-sonnet-4-6',
+                    maxTurns: request.maxTurns || 25,
+                    cwd,
+                    env,
+                    persistSession: false,
+                    allowedTools,
+                    permissionMode: 'bypassPermissions',
+                    allowDangerouslySkipPermissions: true,
+                },
             });
-            let stdout = '';
-            let stderr = '';
-            let killed = false;
-            const timeout = setTimeout(() => {
-                killed = true;
-                child.kill('SIGKILL');
-                reject(new Error('Claude CLI timed out after 180s'));
-            }, 180_000);
-            child.stdout.on('data', (d) => { stdout += d.toString(); });
-            child.stderr.on('data', (d) => { stderr += d.toString(); });
-            // Pipe full prompt via stdin
-            child.stdin.on('error', () => { });
-            child.stdin.write(fullPrompt);
-            child.stdin.end();
-            child.on('close', (code) => {
-                clearTimeout(timeout);
-                if (killed)
-                    return;
-                const durationMs = Date.now() - startTime;
-                log.info({ code, durationMs, stdoutLen: stdout.length, stderrLen: stderr.length }, 'CLI exited');
-                if (stderr) {
-                    log.warn({ stderr: stderr.substring(0, 500) }, 'CLI stderr');
+            // Collect the final text response
+            let content = '';
+            for await (const message of conversation) {
+                if (message.type === 'assistant' && message.message?.content) {
+                    const msgContent = message.message.content;
+                    if (typeof msgContent === 'string') {
+                        content = msgContent;
+                    }
+                    else if (Array.isArray(msgContent)) {
+                        content = msgContent
+                            .filter((block) => block.type === 'text' && block.text)
+                            .map((block) => block.text)
+                            .join('');
+                    }
                 }
-                if (code !== 0 && !stdout) {
-                    log.error({ code, stderr: stderr.substring(0, 500) }, 'CLI failed');
-                    reject(new Error(`CLI exit ${code}: ${stderr}`));
-                    return;
-                }
-                log.debug({ output: stdout.substring(0, 500) }, 'CLI output preview');
-                const estimatedTokens = estimateTokens(stdout);
-                resolve({
-                    content: stdout.trim(),
-                    model: request.model || request.agent.model,
-                    provider: (request.account?.provider || 'anthropic'),
-                    inputTokens: 0,
-                    outputTokens: estimatedTokens,
-                    tokensUsed: estimatedTokens,
-                    costUsd: 0, // CLI subscription — no per-request cost
-                    mode: 'full',
-                    sessionId: undefined,
-                    durationMs,
-                });
-            });
-            child.on('error', (err) => {
-                clearTimeout(timeout);
-                reject(new Error(`Failed to start CLI: ${err.message}`));
-            });
-        });
+            }
+            const durationMs = Date.now() - startTime;
+            const estimatedTokens = estimateTokens(content);
+            log.info({ durationMs, contentLen: content.length }, 'SDK query completed');
+            return {
+                content: content.trim(),
+                model: request.model || request.agent.model,
+                provider: (request.account?.provider || 'anthropic'),
+                inputTokens: 0,
+                outputTokens: estimatedTokens,
+                tokensUsed: estimatedTokens,
+                costUsd: 0,
+                mode: 'full',
+                sessionId: undefined,
+                durationMs,
+            };
+        }
+        catch (err) {
+            const durationMs = Date.now() - startTime;
+            log.error({ err, durationMs }, 'SDK query failed');
+            throw new Error(`Claude SDK failed: ${err instanceof Error ? err.message : String(err)}`);
+        }
     }
 }
 //# sourceMappingURL=cli-runner.js.map
