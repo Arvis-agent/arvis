@@ -23,6 +23,8 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "tailwindcss": "^4.0.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "@upstash/ratelimit": "^2.0.8",
+    "@upstash/redis": "^1.36.3"
   }
 }
