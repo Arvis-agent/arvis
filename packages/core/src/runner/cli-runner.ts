@@ -56,12 +56,13 @@ export class CLIRunner {
     }
 
     // Build env — multi-account support via HOME dir override
-    const env: Record<string, string | undefined> = { ...process.env };
+    // CRITICAL: Set CLAUDECODE to undefined so the SDK doesn't inherit it from parent process.
+    // Without this, Claude CLI refuses to start ("cannot be launched inside another session").
+    const env: Record<string, string | undefined> = { ...process.env, CLAUDECODE: undefined };
     if (request.account?.homeDir) {
       env.HOME = request.account.homeDir;
       env.USERPROFILE = request.account.homeDir;
     }
-    delete env.CLAUDECODE;
 
     log.info({ promptLen: fullPrompt.length, cwd, model: request.model || request.agent.model }, 'Starting SDK query');
 
