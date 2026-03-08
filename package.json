@@ -29,7 +29,8 @@
     "typecheck": "tsc --noEmit",
     "dashboard:build": "npm run build --workspace=packages/dashboard",
     "website": "npm run dev --workspace=packages/website",
-    "website:build": "npm run build --workspace=packages/website"
+    "website:build": "npm run build --workspace=packages/website",
+    "add-account": "tsx scripts/add-account.ts"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.8",

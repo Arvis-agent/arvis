@@ -75,7 +75,31 @@ export function loadConfig(envPath?: string): ArvisConfig {
   // Build accounts list from all detected providers
   const accounts: AccountConfig[] = [];
 
-  // --- Anthropic CLI subscriptions (supports indexed: CLAUDE_CLI_HOME, _1, _2, ...) ---
+  // --- Anthropic CLI subscriptions ---
+
+  // 1. Auto-detect accounts from data/accounts/ directory (created by `npm run add-account`)
+  const accountsDir = path.join(process.cwd(), 'data', 'accounts');
+  if (fs.existsSync(accountsDir)) {
+    const dirs = fs.readdirSync(accountsDir).filter(d => {
+      const full = path.join(accountsDir, d);
+      return fs.statSync(full).isDirectory() && fs.existsSync(path.join(full, '.claude'));
+    });
+    for (let i = 0; i < dirs.length; i++) {
+      accounts.push({
+        name: `cli-${dirs[i]}`,
+        type: 'cli_subscription',
+        provider: 'anthropic',
+        homeDir: path.join(accountsDir, dirs[i]),
+        model: process.env.CLAUDE_CLI_MODEL || 'claude-sonnet-4-6',
+        priority: 10 + i,
+      });
+    }
+    if (dirs.length > 0) {
+      log.info({ count: dirs.length, dir: accountsDir }, 'Auto-detected CLI accounts from data/accounts/');
+    }
+  }
+
+  // 2. Env var overrides (CLAUDE_CLI_HOME, CLAUDE_CLI_HOME_1, _2, ...)
   const cliHomes = collectIndexedKeys('CLAUDE_CLI_HOME');
   const cliModels = collectIndexedKeys('CLAUDE_CLI_MODEL');
   for (let i = 0; i < cliHomes.length; i++) {
@@ -85,7 +109,7 @@ export function loadConfig(envPath?: string): ArvisConfig {
       provider: 'anthropic',
       homeDir: cliHomes[i],
       model: cliModels[i] || process.env.CLAUDE_CLI_MODEL || 'claude-sonnet-4-6',
-      priority: 10 + i, // 10, 11, 12 ... so first account is tried first
+      priority: 10 + i,
     });
   }
 
