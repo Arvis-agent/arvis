@@ -50,13 +50,21 @@ function hashPassword(password: string): string {
   return crypto.pbkdf2Sync(password, salt, 120_000, 32, 'sha256').toString('hex');
 }
 
+// Cache the expected password hash — derived once, not on every login attempt
+let cachedExpectedHash: Buffer | null = null;
+let cachedPasswordSource: string | undefined;
+
 export function verifyPassword(input: string): boolean {
   const expected = process.env.DASHBOARD_PASSWORD;
   if (!expected) return true;
+  // Re-derive only if password env var changed (hot reload)
+  if (!cachedExpectedHash || cachedPasswordSource !== expected) {
+    cachedExpectedHash = Buffer.from(hashPassword(expected));
+    cachedPasswordSource = expected;
+  }
   // Constant-time comparison prevents timing attacks
   const a = Buffer.from(hashPassword(input));
-  const b = Buffer.from(hashPassword(expected));
-  return a.length === b.length && crypto.timingSafeEqual(a, b);
+  return a.length === cachedExpectedHash.length && crypto.timingSafeEqual(a, cachedExpectedHash);
 }
 
 export async function createToken(): Promise<string> {

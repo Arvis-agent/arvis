@@ -114,8 +114,17 @@ export async function POST(request: Request) {
   const { slug, name } = parseBasicFrontmatter(content);
   if (!slug) return NextResponse.json({ error: 'Skill must have slug: in frontmatter' }, { status: 400 });
 
+  // Sanitize slug — prevent path traversal
+  const safeSlug = slug.replace(/[^a-z0-9_-]/gi, '').replace(/^-+|-+$/g, '');
+  if (!safeSlug || safeSlug !== slug) return NextResponse.json({ error: 'Invalid slug — use only a-z, 0-9, hyphens, underscores' }, { status: 400 });
+
   if (!fs.existsSync(COMMUNITY_DIR)) fs.mkdirSync(COMMUNITY_DIR, { recursive: true });
-  const filePath = path.join(COMMUNITY_DIR, `${slug}.md`);
+  const filePath = path.join(COMMUNITY_DIR, `${safeSlug}.md`);
+
+  // Double-check resolved path is inside community dir
+  if (!path.resolve(filePath).startsWith(path.resolve(COMMUNITY_DIR))) {
+    return NextResponse.json({ error: 'Invalid file path' }, { status: 400 });
+  }
   fs.writeFileSync(filePath, content, 'utf-8');
 
   const existing = db.get<{ id: number }>('SELECT id FROM skills WHERE slug = ?', slug);

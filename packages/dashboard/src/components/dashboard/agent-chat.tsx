@@ -138,15 +138,23 @@ export function AgentChat({ agentId, agentName, compact = false }: AgentChatProp
   const [confirmClear, setConfirmClear] = useState(false);
   const [stagedFiles, setStagedFiles] = useState<ChatAttachment[]>([]);
   const [isDragging, setIsDragging] = useState(false);
+  const dragCounter = useRef(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { messages, sendMessage, stopGeneration, isConnected, isTyping, error, clearHistory } = useWebSocket({ agentId });
 
-  /** Convert a File to ChatAttachment (base64) */
+  /** Convert a File to ChatAttachment (base64) — chunked to avoid stack overflow */
   const fileToAttachment = useCallback(async (file: File): Promise<ChatAttachment> => {
     const buf = await file.arrayBuffer();
-    const data = btoa(String.fromCharCode(...new Uint8Array(buf)));
+    const bytes = new Uint8Array(buf);
+    // Chunked base64 encoding — avoids call stack overflow on large files
+    const CHUNK = 0x8000; // 32KB chunks
+    let binary = '';
+    for (let i = 0; i < bytes.length; i += CHUNK) {
+      binary += String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK) as unknown as number[]);
+    }
+    const data = btoa(binary);
     const previewUrl = file.type.startsWith('image/') ? URL.createObjectURL(file) : undefined;
     return { filename: file.name, contentType: file.type || 'application/octet-stream', data, previewUrl };
   }, []);
@@ -206,6 +214,8 @@ export function AgentChat({ agentId, agentName, compact = false }: AgentChatProp
     const content = trimmed || (stagedFiles.length > 0 ? `[${stagedFiles.map(f => f.filename).join(', ')}]` : '');
     sendMessage(content, stagedFiles.length > 0 ? stagedFiles : undefined);
     setInput('');
+    // Revoke blob URLs before clearing staged files
+    stagedFiles.forEach((f) => { if (f.previewUrl) URL.revokeObjectURL(f.previewUrl); });
     setStagedFiles([]);
     if (textareaRef.current) textareaRef.current.style.height = 'auto';
   }
@@ -283,9 +293,10 @@ export function AgentChat({ agentId, agentName, compact = false }: AgentChatProp
       <div
         ref={scrollRef}
         className={cn('flex-1 overflow-y-auto flex flex-col relative', isDragging && 'ring-2 ring-primary/50 ring-inset')}
-        onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-        onDragLeave={() => setIsDragging(false)}
-        onDrop={async (e) => { e.preventDefault(); setIsDragging(false); if (e.dataTransfer.files.length) await stageFiles(e.dataTransfer.files); }}
+        onDragOver={(e) => { e.preventDefault(); }}
+        onDragEnter={(e) => { e.preventDefault(); dragCounter.current++; setIsDragging(true); }}
+        onDragLeave={() => { dragCounter.current--; if (dragCounter.current === 0) setIsDragging(false); }}
+        onDrop={async (e) => { e.preventDefault(); dragCounter.current = 0; setIsDragging(false); if (e.dataTransfer.files.length) await stageFiles(e.dataTransfer.files); }}
       >
         {messages.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6">
@@ -446,7 +457,7 @@ export function AgentChat({ agentId, agentName, compact = false }: AgentChatProp
         ) : (
           <button
             onClick={handleSend}
-            disabled={!isConnected || !input.trim()}
+            disabled={!isConnected || (!input.trim() && stagedFiles.length === 0)}
             className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <Send className="h-3.5 w-3.5" />

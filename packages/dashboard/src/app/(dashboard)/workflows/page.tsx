@@ -207,11 +207,18 @@ export default function WorkflowsPage() {
   const [addKind, setAddKind]     = useState<'heartbeat' | 'cron' | null>(null);
   const [editTarget, setEditTarget] = useState<{ kind: 'heartbeat' | 'cron'; item: Heartbeat | CronJob } | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ kind: 'heartbeat' | 'cron'; id: number; name: string } | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
-    const [wRes, aRes] = await Promise.all([fetch('/api/workflows'), fetch('/api/agents')]);
-    if (wRes.ok) setData(await wRes.json());
-    if (aRes.ok) setAgents(await aRes.json());
+    try {
+      setError(null);
+      const [wRes, aRes] = await Promise.all([fetch('/api/workflows'), fetch('/api/agents')]);
+      if (!wRes.ok || !aRes.ok) throw new Error(`Failed to load data (HTTP ${wRes.status}/${aRes.status})`);
+      setData(await wRes.json());
+      setAgents(await aRes.json());
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load workflows');
+    }
   }, []);
 
   useEffect(() => { fetchData(); }, [fetchData]);
@@ -261,7 +268,14 @@ export default function WorkflowsPage() {
         </div>
       </div>
 
-      {!data ? (
+      {error ? (
+        <div className="rounded-md border border-red-500/30 bg-red-500/5 px-4 py-8 text-center">
+          <p className="text-sm text-red-400 mb-3">{error}</p>
+          <Button size="sm" variant="outline" onClick={fetchData}>
+            <RefreshCw className="h-3.5 w-3.5" />Retry
+          </Button>
+        </div>
+      ) : !data ? (
         <Skeleton className="h-[200px]" />
       ) : total === 0 ? (
         <EmptyState

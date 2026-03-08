@@ -1,3 +1,6 @@
+const DEFAULT_DOT = 'bg-muted-foreground/40';
+const DEFAULT_TEXT = 'text-muted-foreground';
+
 /** Tailwind dot color classes for all status values (agents, queue jobs, conversations) */
 export const STATUS_DOT: Record<string, string> = {
   // Agent statuses
@@ -27,3 +30,11 @@ export const STATUS_TEXT: Record<string, string> = {
   // Conversation statuses
   compacted: 'text-yellow-400',
 };
+
+/** Safe accessors with fallback for unknown statuses */
+export function getStatusDot(status: string): string {
+  return STATUS_DOT[status] ?? DEFAULT_DOT;
+}
+export function getStatusText(status: string): string {
+  return STATUS_TEXT[status] ?? DEFAULT_TEXT;
+}

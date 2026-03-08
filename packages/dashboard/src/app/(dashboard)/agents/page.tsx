@@ -300,13 +300,12 @@ export default function AgentsPage() {
                     agent.status === 'active' ? 'text-emerald-400' : agent.status === 'paused' ? 'text-yellow-400' : 'text-muted-foreground',
                   )}>{agent.status}</span>
                   <div className="flex items-center justify-end gap-0.5">
-                    <Link href={`/agents/${agent.slug}`}>
-                      <button
-                        className="flex h-7 w-7 items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-                        title="View / edit agent"
-                      >
-                        <Eye className="h-3.5 w-3.5" />
-                      </button>
+                    <Link
+                      href={`/agents/${agent.slug}`}
+                      className="flex h-7 w-7 items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                      title="View / edit agent"
+                    >
+                      <Eye className="h-3.5 w-3.5" />
                     </Link>
                     <button
                       onClick={() => setArchiveTarget(agent)}

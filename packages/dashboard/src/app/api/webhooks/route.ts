@@ -9,13 +9,19 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: Request) {
   const authErr = await requireAuth(request); if (authErr) return authErr;
   try {
-    const webhooks = db.all(`
+    const webhooks = db.all<Record<string, unknown>>(`
       SELECT w.*, a.name as agent_name, a.slug as agent_slug
       FROM webhooks w
       LEFT JOIN agents a ON a.id = w.agent_id
       ORDER BY w.enabled DESC, w.created_at DESC
     `);
-    return NextResponse.json(webhooks);
+    // Mask secrets on GET — only show last 4 chars
+    return NextResponse.json(webhooks.map((w) => ({
+      ...w,
+      secret: typeof w.secret === 'string' && w.secret.length > 4
+        ? `${'•'.repeat(Math.min(w.secret.length - 4, 20))}${w.secret.slice(-4)}`
+        : '••••',
+    })));
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Internal error';
     return NextResponse.json({ error: message }, { status: 500 });

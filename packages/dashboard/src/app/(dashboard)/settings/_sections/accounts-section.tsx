@@ -221,7 +221,7 @@ function AddAccountDialog({ open, onClose, onCreated }: { open: boolean; onClose
           <div>
             <Label>Home Directory</Label>
             <Input
-              placeholder={process.platform === 'win32' ? 'C:\\Users\\AccountName' : '/home/username'}
+              placeholder={typeof navigator !== 'undefined' && /Win/.test(navigator.platform) ? 'C:\\Users\\AccountName' : '/home/username'}
               value={form.home_dir}
               onChange={(e) => setField('home_dir', e.target.value)}
             />

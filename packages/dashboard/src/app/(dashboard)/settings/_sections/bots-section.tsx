@@ -456,7 +456,7 @@ export function BotsSection({ bots, agents, onReload }: BotsSectionProps) {
                       ) : (
                         <span className="text-xs text-muted-foreground/40">unassigned</span>
                       )}
-                      <span className="font-mono text-xs text-muted-foreground/40 truncate">{bot.token}</span>
+                      <span className="font-mono text-xs text-muted-foreground/40 truncate">{bot.token && bot.token.length > 6 ? `••••••${bot.token.slice(-6)}` : '••••••'}</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0">

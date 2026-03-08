@@ -24,16 +24,28 @@ export default function SettingsPage() {
 
   const load = useCallback(async () => {
     try {
-      const [a, h, ag, cfg, conn, b, wh, v] = await Promise.all([
+      const results = await Promise.allSettled([
         fetch('/api/accounts').then((r) => r.json()),
         fetch('/api/health').then((r) => r.json()),
         fetch('/api/agents').then((r) => r.json()),
         fetch('/api/settings').then((r) => r.json()),
-        fetch('/api/connectors').then((r) => r.json()).catch(() => ({ configured: {} })),
-        fetch('/api/bots').then((r) => r.json()).catch(() => []),
-        fetch('/api/webhooks').then((r) => r.json()).catch(() => []),
-        fetch('/api/variables').then((r) => r.json()).catch(() => []),
+        fetch('/api/connectors').then((r) => r.json()),
+        fetch('/api/bots').then((r) => r.json()),
+        fetch('/api/webhooks').then((r) => r.json()),
+        fetch('/api/variables').then((r) => r.json()),
       ]);
+
+      const val = <T,>(i: number, fallback: T): T =>
+        results[i].status === 'fulfilled' ? (results[i] as PromiseFulfilledResult<T>).value : fallback;
+
+      const a = val(0, { accounts: [] });
+      const h = val<HealthData | null>(1, null);
+      const ag = val(2, []);
+      const cfg = val(3, {});
+      const conn = val(4, { configured: {} });
+      const b = val(5, []);
+      const wh = val(6, []);
+      const v = val(7, []);
 
       if (conn.configured) setConnectorStatus(conn.configured as Record<string, boolean>);
       setAccounts(a.accounts ?? []);
@@ -45,21 +57,25 @@ export default function SettingsPage() {
       const agentList: Agent[] = Array.isArray(ag) ? ag : [];
       setAgents(agentList);
 
-      const existingConductor: number | null = cfg.conductorAgentId ?? null;
+      const existingConductor: number | null = (cfg as Record<string, unknown>).conductorAgentId as number | null ?? null;
       setConductorId(existingConductor);
 
-      // Auto-select conductor if not set
+      // Auto-select conductor in state only (don't auto-save to server)
       if (existingConductor === null) {
         const active = agentList.filter((x) => x.status !== 'archived');
         const pick = active.find((x) => x.role === 'orchestrator') ?? (active.length === 1 ? active[0] : null);
         if (pick) {
-          await fetch('/api/settings', {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ conductorAgentId: pick.id }),
-          });
           setConductorId(pick.id);
         }
+      }
+
+      // Report individual failures
+      const failedEndpoints = ['accounts', 'health', 'agents', 'settings', 'connectors', 'bots', 'webhooks', 'variables'];
+      const failures = results
+        .map((r, i) => r.status === 'rejected' ? failedEndpoints[i] : null)
+        .filter(Boolean);
+      if (failures.length > 0) {
+        toast.error(`Failed to load: ${failures.join(', ')}`);
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to load');

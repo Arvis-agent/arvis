@@ -44,21 +44,24 @@ export default function LoginPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-3">
+          <label htmlFor="password" className="sr-only">Password</label>
           <Input
+            id="password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Password"
             autoFocus
+            aria-describedby={error ? 'login-error' : undefined}
           />
-          {error && <p className="text-sm text-red-400">{error}</p>}
+          {error && <p id="login-error" role="alert" className="text-sm text-red-400">{error}</p>}
           <Button type="submit" variant="primary" disabled={loading || !password} className="w-full">
             {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Authenticating...</> : 'Continue'}
           </Button>
         </form>
 
         <p className="text-center text-xs text-muted-foreground">
-          Set DASHBOARD_PASSWORD to enable
+          Protected access
         </p>
       </div>
     </div>

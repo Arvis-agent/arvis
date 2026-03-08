@@ -38,7 +38,7 @@ const REFRESH_INTERVAL_MS = 3000;
 export default function QueuePage() {
   const [data, setData] = useState<QueueData | null>(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
-  const [actioning, setActioning] = useState<number | null>(null);
+  const [actioning, setActioning] = useState<Set<number>>(new Set());
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -68,6 +68,7 @@ export default function QueuePage() {
       });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to load queue');
+      setAutoRefresh(false);
     }
   }, []);
 
@@ -83,7 +84,7 @@ export default function QueuePage() {
   }, [fetchQueue, autoRefresh]);
 
   async function handleRetry(jobId: number) {
-    setActioning(jobId);
+    setActioning(prev => new Set(prev).add(jobId));
     try {
       const res = await fetch(`/api/queue/${jobId}`, {
         method: 'PATCH',
@@ -99,12 +100,12 @@ export default function QueuePage() {
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Retry failed');
     } finally {
-      setActioning(null);
+      setActioning(prev => { const next = new Set(prev); next.delete(jobId); return next; });
     }
   }
 
   async function handleKill(jobId: number) {
-    setActioning(jobId);
+    setActioning(prev => new Set(prev).add(jobId));
     try {
       const res = await fetch(`/api/queue/${jobId}`, {
         method: 'PATCH',
@@ -120,12 +121,12 @@ export default function QueuePage() {
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Kill failed');
     } finally {
-      setActioning(null);
+      setActioning(prev => { const next = new Set(prev); next.delete(jobId); return next; });
     }
   }
 
   async function handleCancel(jobId: number) {
-    setActioning(jobId);
+    setActioning(prev => new Set(prev).add(jobId));
     try {
       const res = await fetch(`/api/queue/${jobId}`, { method: 'DELETE' });
       if (!res.ok) {
@@ -137,7 +138,7 @@ export default function QueuePage() {
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Cancel failed');
     } finally {
-      setActioning(null);
+      setActioning(prev => { const next = new Set(prev); next.delete(jobId); return next; });
     }
   }
 
@@ -311,7 +312,7 @@ function JobTable({
   jobs: QueueJob[];
   expandedId: number | null;
   setExpandedId: (id: number | null) => void;
-  actioning: number | null;
+  actioning: Set<number>;
   onRetry?: (id: number) => void;
   onCancel?: (id: number) => void;
   onKill?: (id: number) => void;
@@ -339,7 +340,7 @@ function JobTable({
         {/* Rows */}
         {jobs.map((job) => {
           const expanded = expandedId === job.id;
-          const isActioning = actioning === job.id;
+          const isActioning = actioning.has(job.id);
           const dur = job.started_at && job.completed_at
             ? Math.round((new Date(job.completed_at).getTime() - new Date(job.started_at).getTime()) / 1000)
             : job.started_at

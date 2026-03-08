@@ -76,7 +76,7 @@ export function SiteHeader() {
           <Search className="h-3.5 w-3.5 shrink-0" />
           <span className="flex-1 text-left">Search...</span>
           <kbd className="ml-auto rounded border border-border/50 bg-background px-1.5 py-0.5 font-mono text-[10px]">
-            ⌘K
+            {typeof navigator !== 'undefined' && /Mac|iPhone/.test(navigator.userAgent) ? '⌘K' : 'Ctrl+K'}
           </kbd>
         </button>
 
@@ -84,6 +84,7 @@ export function SiteHeader() {
         <button
           onClick={openCmdK}
           className="sm:hidden flex h-8 w-8 items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+          aria-label="Search"
         >
           <Search className="h-3.5 w-3.5" />
         </button>

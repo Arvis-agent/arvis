@@ -63,6 +63,7 @@ export function useWebSocket({
   const reconnectAttempts = useRef(0);
   const reconnectTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pingTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const historyLoaded = useRef(false);
   const userCleared = useRef(false);   // user explicitly hit "Start fresh"
   const effectiveChannel = channelId || `dashboard-agent-${agentId}`;
@@ -70,16 +71,17 @@ export function useWebSocket({
   // Load history from DB — eagerly on mount, skip if user already cleared
   const loadHistory = useCallback(async () => {
     if (historyLoaded.current || userCleared.current) return;
-    historyLoaded.current = true;
     try {
       const res = await fetch(`/api/agents/${agentId}/history`);
       if (!res.ok) return;
       const data = await res.json() as { messages: ChatMessage[] };
+      historyLoaded.current = true;
       if (data.messages?.length) {
         setMessages(data.messages.map((m) => ({ ...m, isNew: false })));
       }
     } catch {
       // Silently ignore — chat still works without history
+      // Don't set historyLoaded so it can retry on reconnect
     }
   }, [agentId]);
 
@@ -94,7 +96,8 @@ export function useWebSocket({
     const host = process.env.NEXT_PUBLIC_CONNECTOR_WEB_HOST || 'localhost';
 
     try {
-      const ws = new WebSocket(`ws://${host}:${port}`);
+      const protocol = typeof window !== 'undefined' && window.location.protocol === 'https:' ? 'wss' : 'ws';
+      const ws = new WebSocket(`${protocol}://${host}:${port}`);
       wsRef.current = ws;
 
       ws.onopen = () => {
@@ -107,6 +110,13 @@ export function useWebSocket({
           userName,
           channelId: effectiveChannel,
         }));
+        // Keepalive ping every 30s to prevent silent connection death behind proxies
+        if (pingTimer.current) clearInterval(pingTimer.current);
+        pingTimer.current = setInterval(() => {
+          if (ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ type: 'ping' }));
+          }
+        }, 30_000);
       };
 
       ws.onmessage = (event) => {
@@ -207,6 +217,7 @@ export function useWebSocket({
     return () => {
       if (reconnectTimeout.current) clearTimeout(reconnectTimeout.current);
       if (typingTimer.current) clearTimeout(typingTimer.current);
+      if (pingTimer.current) clearInterval(pingTimer.current);
       if (wsRef.current) {
         detachHandlers(wsRef.current);
         wsRef.current.close();

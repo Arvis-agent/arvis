@@ -33,9 +33,6 @@ export async function POST(req: NextRequest) {
     if (!key || typeof key !== 'string' || !key.trim()) {
       return NextResponse.json({ error: 'Key is required' }, { status: 400 });
     }
-    if (value === undefined || value === null || typeof value !== 'string') {
-      return NextResponse.json({ error: 'Value is required' }, { status: 400 });
-    }
 
     // Validate key format: alphanumeric, underscores, hyphens, dots
     if (!/^[a-zA-Z0-9_.\-]+$/.test(key.trim())) {
@@ -45,7 +42,18 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    variables.set(key.trim(), value, description?.trim(), !!isSecret);
+    // If value is omitted, try to keep the existing value (edit metadata only)
+    let finalValue = value;
+    if (finalValue === undefined || finalValue === null || finalValue === '') {
+      const existing = variables.get(key.trim());
+      if (existing !== null) {
+        finalValue = existing;
+      } else {
+        return NextResponse.json({ error: 'Value is required for new variables' }, { status: 400 });
+      }
+    }
+
+    variables.set(key.trim(), finalValue, description?.trim(), !!isSecret);
 
     return NextResponse.json({ success: true });
   } catch (err) {

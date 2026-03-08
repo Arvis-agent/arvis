@@ -48,8 +48,17 @@ export async function PATCH(
       db.run('UPDATE agents SET status = ?, updated_at = datetime(\'now\') WHERE id = ?', body.status, agent.id);
     }
 
-    // update remaining config fields via registry
-    const { status: _status, ...config } = body;
+    // Whitelist allowed config fields to prevent arbitrary property injection
+    const ALLOWED_FIELDS = [
+      'name', 'role', 'model', 'modelFallbacks', 'systemPrompt', 'personality',
+      'temperature', 'maxTokens', 'topP', 'allowedTools', 'channels',
+      'contextWindow', 'compactionThreshold', 'description',
+    ];
+    const { status: _status, ...rawConfig } = body;
+    const config: Record<string, unknown> = {};
+    for (const key of ALLOWED_FIELDS) {
+      if (key in rawConfig) config[key] = rawConfig[key];
+    }
     if (Object.keys(config).length > 0) {
       registry.update(agent.slug, config);
     }

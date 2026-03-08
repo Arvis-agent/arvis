@@ -12,5 +12,6 @@ export async function GET(request: NextRequest) {
     database: db.isHealthy(),
     agents: registry.getAll().length,
     queue: queue.getStatus(),
+    authEnabled: !!process.env.DASHBOARD_PASSWORD,
   });
 }

@@ -5,7 +5,7 @@ import { requireAuth } from '@/lib/api-auth';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const VALID_PLATFORMS = ['discord', 'telegram', 'slack', 'whatsapp', 'matrix'] as const;
+const VALID_PLATFORMS = ['discord', 'telegram', 'slack', 'whatsapp', 'matrix', 'sms', 'email'] as const;
 
 function maskToken(token: string): string {
   if (token.length <= 8) return '••••••••';

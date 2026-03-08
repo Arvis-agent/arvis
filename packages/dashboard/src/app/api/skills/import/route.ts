@@ -46,6 +46,22 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Only http/https URLs allowed' }, { status: 400 });
   }
 
+  // Block internal/private IPs to prevent SSRF
+  const hostname = parsedUrl.hostname;
+  if (
+    hostname === 'localhost' ||
+    hostname === '127.0.0.1' ||
+    hostname === '::1' ||
+    hostname === '0.0.0.0' ||
+    hostname.startsWith('10.') ||
+    hostname.startsWith('192.168.') ||
+    hostname.startsWith('172.') ||
+    hostname === '169.254.169.254' ||
+    hostname.endsWith('.local')
+  ) {
+    return NextResponse.json({ error: 'URLs pointing to internal/private networks are not allowed' }, { status: 400 });
+  }
+
   // Fetch the skill content
   let content: string;
   try {
@@ -56,7 +72,15 @@ export async function POST(request: Request) {
     if (!res.ok) {
       return NextResponse.json({ error: `Fetch failed: HTTP ${res.status} from ${rawUrl}` }, { status: 502 });
     }
+    // Limit response size to 1MB to prevent OOM
+    const contentLength = res.headers.get('content-length');
+    if (contentLength && parseInt(contentLength, 10) > 1_048_576) {
+      return NextResponse.json({ error: 'Content too large (max 1MB)' }, { status: 400 });
+    }
     content = await res.text();
+    if (content.length > 1_048_576) {
+      return NextResponse.json({ error: 'Content too large (max 1MB)' }, { status: 400 });
+    }
   } catch (err) {
     return NextResponse.json({ error: `Fetch error: ${String(err)}` }, { status: 502 });
   }
@@ -73,9 +97,20 @@ export async function POST(request: Request) {
     );
   }
 
+  // Sanitize slug — prevent path traversal
+  const safeSlug = slug.replace(/[^a-z0-9_-]/gi, '').replace(/^-+|-+$/g, '');
+  if (!safeSlug || safeSlug !== slug) {
+    return NextResponse.json({ error: 'Invalid slug in skill frontmatter — use only a-z, 0-9, hyphens, underscores' }, { status: 400 });
+  }
+
   // Save to community skills dir
   if (!fs.existsSync(COMMUNITY_DIR)) fs.mkdirSync(COMMUNITY_DIR, { recursive: true });
-  const filePath = path.join(COMMUNITY_DIR, `${slug}.md`);
+  const filePath = path.join(COMMUNITY_DIR, `${safeSlug}.md`);
+
+  // Double-check resolved path is inside community dir
+  if (!path.resolve(filePath).startsWith(path.resolve(COMMUNITY_DIR))) {
+    return NextResponse.json({ error: 'Invalid file path' }, { status: 400 });
+  }
   fs.writeFileSync(filePath, content, 'utf-8');
 
   // Upsert in DB

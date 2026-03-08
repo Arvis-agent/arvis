@@ -1,11 +1,11 @@
 {
   "name": "@arvis/dashboard",
-  "version": "3.3.2",
+  "version": "3.4.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --port 3000",
+    "dev": "next dev --port 5100 --turbopack",
     "build": "next build",
-    "start": "next start --port 3000"
+    "start": "next start --port 5100"
   },
   "dependencies": {
     "@arvis/core": "*",

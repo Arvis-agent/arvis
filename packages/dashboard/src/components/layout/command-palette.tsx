@@ -40,7 +40,7 @@ export function CommandPalette() {
 
   useEffect(() => {
     if (open && agents.length === 0) {
-      fetch('/api/agents').then((r) => r.json()).then(setAgents).catch(() => {});
+      fetch('/api/agents').then((r) => { if (!r.ok) throw new Error(); return r.json(); }).then((data) => { if (Array.isArray(data)) setAgents(data); }).catch(() => {});
     }
   }, [open, agents.length]);
 
@@ -136,7 +136,7 @@ function CmdItem({
   subtitle,
   onSelect,
 }: {
-  icon: typeof Bot;
+  icon: React.ComponentType<{ className?: string }>;
   label: string;
   subtitle?: string;
   onSelect: () => void;

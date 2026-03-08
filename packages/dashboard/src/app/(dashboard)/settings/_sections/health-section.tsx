@@ -55,11 +55,15 @@ export function HealthSection({ health, connectorStatus }: HealthSectionProps) {
           <div className="p-4 space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-xs text-muted-foreground">Authentication</span>
-              <Badge variant="warning">Open</Badge>
+              {health?.authEnabled
+                ? <Badge variant="success">Enabled</Badge>
+                : <Badge variant="warning">Open</Badge>}
             </div>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Set <code className="font-mono text-foreground bg-muted px-1 py-0.5 rounded">DASHBOARD_PASSWORD</code> env var to enable login gate
-            </p>
+            {!health?.authEnabled && (
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Set <code className="font-mono text-foreground bg-muted px-1 py-0.5 rounded">DASHBOARD_PASSWORD</code> env var to enable login gate
+              </p>
+            )}
             <div className="flex items-center justify-between">
               <span className="text-xs text-muted-foreground">JWT Secret</span>
               <Badge variant="secondary">Auto-generated</Badge>

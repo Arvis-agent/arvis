@@ -84,7 +84,7 @@ export async function GET(request: Request) {
     // DB config overrides env var
     const value = config[key] ?? envFallbacks[key] ?? '';
     // Mask secrets (tokens/keys) — show only last 4 chars if set
-    const isSecret = key.includes('token') || key.includes('key') || key.includes('secret');
+    const isSecret = key.includes('token') || key.includes('key') || key.includes('secret') || key.includes('password');
     result[key] = isSecret && value.length > 4
       ? `${'•'.repeat(Math.min(value.length - 4, 20))}${value.slice(-4)}`
       : value;

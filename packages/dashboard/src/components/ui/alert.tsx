@@ -6,8 +6,8 @@ const VARIANTS: Record<string, string> = {
   warning: 'border-yellow-500/20 bg-yellow-500/5 text-yellow-400',
 };
 
-export function Alert({ variant = 'default', className, children, ...props }: React.HTMLAttributes<HTMLDivElement> & { variant?: string }) {
-  return <div className={cn('rounded-md border p-4 text-sm', VARIANTS[variant] || VARIANTS.default, className)} {...props}>{children}</div>;
+export function Alert({ variant = 'default', className, children, ...props }: React.HTMLAttributes<HTMLDivElement> & { variant?: 'default' | 'destructive' | 'warning' }) {
+  return <div role="alert" className={cn('rounded-md border p-4 text-sm', VARIANTS[variant] || VARIANTS.default, className)} {...props}>{children}</div>;
 }
 
 export function AlertTitle({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {

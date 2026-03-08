@@ -27,6 +27,7 @@ interface Metrics {
 export default function OverviewPage() {
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [fetchError, setFetchError] = useState(false);
 
   const fetchMetrics = useCallback(async () => {
     try {
@@ -34,8 +35,10 @@ export default function OverviewPage() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       setMetrics(await res.json());
       setLastUpdated(new Date());
+      setFetchError(false);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to load metrics');
+      setFetchError(true);
     }
   }, []);
 
@@ -46,6 +49,22 @@ export default function OverviewPage() {
   }, [fetchMetrics]);
 
   if (!metrics) {
+    if (fetchError) {
+      return (
+        <div className="space-y-6">
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <AlertTriangle className="h-8 w-8 text-muted-foreground mb-3" />
+            <p className="text-sm text-muted-foreground mb-4">Failed to load metrics</p>
+            <button
+              onClick={() => { setFetchError(false); fetchMetrics(); }}
+              className="rounded-md border border-border px-4 py-2 text-sm text-foreground hover:bg-accent transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      );
+    }
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">

@@ -115,7 +115,9 @@ function SidebarContent({ onNav }: { onNav?: () => void }) {
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
             Online
           </span>
-          <kbd className="rounded border border-border bg-muted px-1.5 py-0.5 text-[10px]">⌘K</kbd>
+          <kbd className="rounded border border-border bg-muted px-1.5 py-0.5 text-[10px]">
+            {typeof navigator !== 'undefined' && /Mac|iPhone/.test(navigator.userAgent) ? '⌘K' : 'Ctrl+K'}
+          </kbd>
         </div>
       </div>
     </aside>

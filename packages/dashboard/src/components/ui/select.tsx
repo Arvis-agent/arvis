@@ -76,12 +76,13 @@ export function Select({ value, onChange, options, placeholder = 'Select...', di
         onKeyDown={onKey}
         onClick={toggle}
         className={cn(
-          'flex h-9 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-sm transition-colors',
-          'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
+          'flex h-9 w-full items-center justify-between rounded-md border border-border bg-background px-3 py-1 text-sm text-foreground shadow-sm transition-colors',
+          'focus-visible:outline-none focus-visible:border-primary/50',
           'disabled:opacity-50 disabled:cursor-not-allowed',
-          open && 'ring-1 ring-ring',
+          open && 'border-primary/50',
         )}
         aria-expanded={open}
+        aria-haspopup="listbox"
       >
         <span className={cn('truncate', !selected && 'text-muted-foreground')}>
           {selected ? selected.label : placeholder}
@@ -91,6 +92,7 @@ export function Select({ value, onChange, options, placeholder = 'Select...', di
 
       {open && (
         <div
+          role="listbox"
           className={cn(
             'absolute z-50 mt-1 w-full min-w-[160px] rounded-md border border-border bg-background shadow-lg overflow-hidden',
             closing ? 'select-dropdown-exit' : 'select-dropdown-enter',
@@ -101,6 +103,8 @@ export function Select({ value, onChange, options, placeholder = 'Select...', di
               <button
                 key={opt.value}
                 type="button"
+                role="option"
+                aria-selected={opt.value === value}
                 onClick={() => { onChange(opt.value); close(); }}
                 className={cn(
                   'flex w-full items-center justify-between px-3 py-2.5 text-sm transition-colors text-left',

@@ -52,7 +52,7 @@ export function Toaster() {
 
   useEffect(() => {
     function onToast(message: string, type: ToastType) {
-      const id = Math.random().toString(36).slice(2, 10);
+      const id = crypto.randomUUID();
       setToasts((prev) => [...prev.slice(-4), { id, message, type, exiting: false }]);
       timers.current.set(id, setTimeout(() => dismiss(id), DURATION));
     }
@@ -63,7 +63,7 @@ export function Toaster() {
   if (!mounted || toasts.length === 0) return null;
 
   return createPortal(
-    <div className="fixed bottom-4 right-4 z-[200] flex flex-col gap-2 pointer-events-none w-full max-w-[320px]">
+    <div className="fixed bottom-4 right-4 z-[200] flex flex-col gap-2 pointer-events-none w-full max-w-[320px]" aria-live="polite" aria-relevant="additions removals">
       {toasts.map((t) => {
         const Icon = ICONS[t.type];
         return (
@@ -78,7 +78,7 @@ export function Toaster() {
           >
             <Icon className="h-4 w-4 shrink-0 opacity-70" />
             <p className="flex-1 text-sm leading-snug">{t.message}</p>
-            <button onClick={() => dismiss(t.id)} className="shrink-0 opacity-30 hover:opacity-70 transition-opacity">
+            <button onClick={() => dismiss(t.id)} aria-label="Dismiss notification" className="shrink-0 opacity-30 hover:opacity-70 transition-opacity">
               <X className="h-3.5 w-3.5" />
             </button>
           </div>

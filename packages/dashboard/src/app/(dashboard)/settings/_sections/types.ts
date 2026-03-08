@@ -53,4 +53,5 @@ export interface HealthData {
   database: boolean;
   agents: number;
   queue: { pending: number; running: number };
+  authEnabled?: boolean;
 }

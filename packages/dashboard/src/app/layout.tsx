@@ -23,7 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`dark ${GeistSans.variable} ${GeistMono.variable} ${GeistPixelSquare.variable}`}
     >
       {/* GeistPixelSquare.className applies font-family + font-weight:500 directly */}
-      <body className={`${GeistPixelSquare.className} antialiased grain`}>
+      <body className={`${GeistPixelSquare.className} antialiased`} suppressHydrationWarning>
         {children}
       </body>
     </html>

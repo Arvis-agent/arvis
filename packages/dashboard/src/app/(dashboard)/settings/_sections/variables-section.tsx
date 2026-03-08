@@ -201,14 +201,10 @@ function VariableDialog({
         isSecret,
       };
       // Only send value if provided (for edits, empty = keep existing)
-      if (value || !editing) {
+      if (value) {
         body.value = value;
-      } else {
-        // Re-read current value for the upsert
-        // Actually, we need a value for upsert, so require it
-        toast.error('Enter the new value');
-        setSaving(false);
-        return;
+      } else if (!editing) {
+        body.value = value;
       }
 
       const res = await fetch('/api/variables', {
